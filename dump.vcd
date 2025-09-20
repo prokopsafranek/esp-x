@@ -1,0 +1,227 @@
+$date
+	Sat Sep 20 09:27:09 2025
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module testbench $end
+$var wire 32 ! mem_wdata [31:0] $end
+$var wire 1 " mem_we $end
+$var wire 32 # mem_addr [31:0] $end
+$var wire 10 $ gpio_pins [9:0] $end
+$var reg 1 % clk $end
+$var reg 32 & mem_rdata [31:0] $end
+$var reg 1 ' reset $end
+$scope module cpu $end
+$var wire 1 ( branch_taken $end
+$var wire 1 % clk $end
+$var wire 32 ) instruction [31:0] $end
+$var wire 32 * mem_addr [31:0] $end
+$var wire 32 + mem_rdata [31:0] $end
+$var wire 32 , mem_wdata [31:0] $end
+$var wire 1 " mem_we $end
+$var wire 1 ' reset $end
+$var wire 4 - rs2 [3:0] $end
+$var wire 4 . rs1 [3:0] $end
+$var wire 1 / reg_write_enable $end
+$var wire 32 0 reg_write_data [31:0] $end
+$var wire 32 1 reg_data2 [31:0] $end
+$var wire 32 2 reg_data1 [31:0] $end
+$var wire 4 3 rd [3:0] $end
+$var wire 32 4 pc [31:0] $end
+$var wire 6 5 opcode [5:0] $end
+$var wire 32 6 next_pc [31:0] $end
+$var wire 1 7 mem_write $end
+$var wire 1 8 mem_read $end
+$var wire 1 9 jump $end
+$var wire 16 : immediate [15:0] $end
+$var wire 10 ; gpio_pins [9:0] $end
+$var wire 1 < alu_zero $end
+$var wire 32 = alu_result [31:0] $end
+$var wire 4 > alu_op [3:0] $end
+$var reg 32 ? pc_reg [31:0] $end
+$scope module alu_unit $end
+$var wire 32 @ b [31:0] $end
+$var wire 1 < zero $end
+$var wire 4 A alu_op [3:0] $end
+$var wire 32 B a [31:0] $end
+$var parameter 4 C ALU_ADD $end
+$var parameter 4 D ALU_AND $end
+$var parameter 4 E ALU_OR $end
+$var parameter 4 F ALU_SUB $end
+$var parameter 4 G ALU_XOR $end
+$var reg 32 H result [31:0] $end
+$upscope $end
+$scope module decoder $end
+$var wire 32 I instruction [31:0] $end
+$var wire 4 J rs2 [3:0] $end
+$var wire 4 K rs1 [3:0] $end
+$var wire 4 L rd [3:0] $end
+$var wire 6 M opcode [5:0] $end
+$var wire 16 N immediate [15:0] $end
+$var parameter 4 O ALU_ADD $end
+$var parameter 4 P ALU_SUB $end
+$var parameter 6 Q OP_ADD $end
+$var parameter 6 R OP_BEQ $end
+$var parameter 6 S OP_JMP $end
+$var parameter 6 T OP_LOAD $end
+$var parameter 6 U OP_STORE $end
+$var parameter 6 V OP_SUB $end
+$var reg 4 W alu_op [3:0] $end
+$var reg 1 9 jump $end
+$var reg 1 8 mem_read $end
+$var reg 1 7 mem_write $end
+$var reg 1 / reg_write_enable $end
+$upscope $end
+$scope module mem_ctrl $end
+$var wire 32 X addr [31:0] $end
+$var wire 1 % clk $end
+$var wire 1 8 re $end
+$var wire 1 ' reset $end
+$var wire 1 7 we $end
+$var wire 32 Y wdata [31:0] $end
+$var wire 10 Z gpio_pins [9:0] $end
+$var wire 10 [ gpio_in [9:0] $end
+$var reg 10 \ gpio_dir_reg [9:0] $end
+$var reg 10 ] gpio_out_reg [9:0] $end
+$var reg 32 ^ rdata [31:0] $end
+$var integer 32 _ j [31:0] $end
+$scope begin gpio_control[0] $end
+$var parameter 2 ` i $end
+$upscope $end
+$scope begin gpio_control[1] $end
+$var parameter 2 a i $end
+$upscope $end
+$scope begin gpio_control[2] $end
+$var parameter 3 b i $end
+$upscope $end
+$scope begin gpio_control[3] $end
+$var parameter 3 c i $end
+$upscope $end
+$scope begin gpio_control[4] $end
+$var parameter 4 d i $end
+$upscope $end
+$scope begin gpio_control[5] $end
+$var parameter 4 e i $end
+$upscope $end
+$scope begin gpio_control[6] $end
+$var parameter 4 f i $end
+$upscope $end
+$scope begin gpio_control[7] $end
+$var parameter 4 g i $end
+$upscope $end
+$scope begin gpio_control[8] $end
+$var parameter 5 h i $end
+$upscope $end
+$scope begin gpio_control[9] $end
+$var parameter 5 i i $end
+$upscope $end
+$upscope $end
+$scope module regfile $end
+$var wire 1 % clk $end
+$var wire 4 j read_addr1 [3:0] $end
+$var wire 4 k read_addr2 [3:0] $end
+$var wire 1 ' reset $end
+$var wire 4 l write_addr [3:0] $end
+$var wire 32 m write_data [31:0] $end
+$var wire 1 / write_enable $end
+$var wire 32 n read_data2 [31:0] $end
+$var wire 32 o read_data1 [31:0] $end
+$var integer 32 p i [31:0] $end
+$upscope $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+$comment Show the parameter values. $end
+$dumpall
+b1001 i
+b1000 h
+b111 g
+b110 f
+b101 e
+b100 d
+b11 c
+b10 b
+b1 a
+b0 `
+b1 V
+b11 U
+b10 T
+b100 S
+b101 R
+b0 Q
+b1 P
+b0 O
+b100 G
+b1 F
+b11 E
+b10 D
+b0 C
+$end
+#0
+$dumpvars
+b10000 p
+b0 o
+b0 n
+b0 m
+b100 l
+b0 k
+b0 j
+b10000000000 _
+b0 ^
+b0 ]
+b0 \
+bz [
+bz Z
+b0 Y
+b0 X
+b0 W
+b1 N
+b0 M
+b100 L
+b0 K
+b0 J
+b1000000000000000000000001 I
+b0 H
+b0 B
+b0 A
+b0 @
+b0 ?
+b0 >
+b0 =
+1<
+bz ;
+b1 :
+09
+08
+07
+b100 6
+b0 5
+b0 4
+b100 3
+b0 2
+b0 1
+b0 0
+1/
+b0 .
+b0 -
+bz ,
+b1000000000000000000000001 +
+b0 *
+b1000000000000000000000001 )
+0(
+1'
+b1000000000000000000000001 &
+0%
+bz $
+b0 #
+z"
+bz !
+$end
+#5000
+1%
+#10000
+0%
