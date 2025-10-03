@@ -344,7 +344,8 @@ Possible improvements for future versions:
 
 ## 📄 License
 
-This project is provided as-is for educational and research purposes.
+This project is governed by the terms available at:
+https://prokopsafranek.com/privacy
 
 ## 👤 Author
 
