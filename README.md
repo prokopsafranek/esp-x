@@ -1,296 +1,372 @@
-# Custom SoC/MCU Project - From Silicon to System
+# MVP Chip - Dual-Core RISC-V SoC
 
-![SkyWater 130nm Technology](https://img.shields.io/badge/SkyWater-130nm-blue?style=for-the-badge)
-![Google Partnership](https://img.shields.io/badge/Google-Partner-4285f4?style=for-the-badge)
-![Open Source](https://img.shields.io/badge/Open%20Source-Hardware-green?style=for-the-badge)
+A minimal viable product (MVP) system-on-chip (SoC) design featuring dual RV32I cores with basic peripherals, implemented in Verilog-2001.
 
-This project focuses on developing a custom chip (SoC/MCU) along with a complete PCB design using **Google's SkyWater 130nm open-source PDK**. The goal is to create a simple yet functional chip for embedded applications with modern communication capabilities.
+## 📋 Architecture Overview
 
-## 🤝 Partnership & Technology
+### Key Specifications
 
-<div align="center">
+- **CPU**: 2× RV32I cores with 2-stage pipeline (Fetch/Execute)
+- **Clock**: 100 MHz
+- **Voltage**: 1.0 V
+- **RAM**: 1 MB internal SRAM (dual-port, single-cycle access)
+- **GPIO**: 10 general-purpose I/O pins
+- **UART**: 1× UART interface (115200 baud, 8N1)
+- **Flash**: 10 MB external SPI Flash (Mode 0, XIP boot)
+- **PMU**: Power Management Unit with sleep mode and UART wake-up
+- **Bus**: 32-bit address bus, 32-bit data bus, memory-mapped I/O
 
-![SkyWater Logo](https://skywater-pdk.readthedocs.io/en/main/_static/skywater_logo.png)
+### Features
 
-**Manufactured in partnership with Google using SkyWater 130nm technology**
+- ✅ No interrupts (simple polling architecture)
+- ✅ No CSR (Control and Status Registers)
+- ✅ Integer operations only (RV32I base instruction set)
+- ✅ Boot from external Flash via Execute-in-Place (XIP)
+- ✅ Dual-port SRAM for concurrent CPU access
+- ✅ Shared peripheral access with simple arbiter
 
-</div>
+## 🏗️ Module Descriptions
 
-This project leverages the **SkyWater Sky130 Process Design Kit (PDK)**, an open-source 130nm process technology made available through Google's partnership with SkyWater Technology. This enables accessible silicon fabrication for open-source hardware projects.
+### Top-Level Module: `mvp_chip.v`
 
-### 🏭 Manufacturing Details
-- **Process Node**: SkyWater Sky130 (130nm)
-- **Technology**: CMOS
-- **Voltage**: 1.8V/3.3V mixed-signal capable
-- **Partner**: Google Open Source Silicon Initiative
-- **Foundry**: SkyWater Technology
+Main chip integration module that instantiates and interconnects all components.
 
-## 🎯 Project Objective
+**Ports:**
+- `clk` - 100 MHz system clock input
+- `rst` - Active-high reset input
+- `gpio_pins[9:0]` - Bidirectional GPIO pins
+- `uart_rx` - UART receive input
+- `uart_tx` - UART transmit output
+- `flash_cs` - SPI Flash chip select (active low)
+- `flash_sclk` - SPI Flash clock
+- `flash_mosi` - SPI Flash Master Out Slave In
+- `flash_miso` - SPI Flash Master In Slave Out
 
-Design and manufacture a custom chip with a minimalist but practical design focused on computational power and implementation simplicity, utilizing the open-source SkyWater 130nm process.
+### CPU Core: `rv32i_core.v`
 
-## 🔧 Chip Architecture (SoC/MCU)
+RV32I CPU core with 2-stage pipeline (black box implementation).
 
-<div align="center">
+**Pipeline Stages:**
+1. **Fetch**: Instruction fetch from memory or Flash
+2. **Execute**: Instruction decode and execution
 
-```mermaid
-graph TB
-    subgraph "Custom SoC (Sky130)"
-        CPU1[CPU Core 1<br/>RISC-V]
-        CPU2[CPU Core 2<br/>RISC-V]
-        SRAM[SRAM<br/>1 MB]
-        FLASH[Flash<br/>10 MB]
-        GPIO[GPIO<br/>10-20 pins]
-        UART[UART<br/>Debug]
-        SPI[SPI<br/>External Comms]
-        CLK[Clock Gen<br/>+ PLL]
-        PMU[Power Mgmt<br/>Unit]
-        
-        CPU1 <--> SRAM
-        CPU2 <--> SRAM
-        CPU1 <--> FLASH
-        CPU2 <--> FLASH
-        CLK --> CPU1
-        CLK --> CPU2
-        PMU --> CPU1
-        PMU --> CPU2
-    end
+**Features:**
+- 32-bit address space
+- Byte-addressable memory
+- Byte enable signals for partial word access
+- Clock gating support for power management
+
+### SRAM: `sram_1mb.v`
+
+1 MB dual-port synchronous SRAM.
+
+**Configuration:**
+- Size: 1,048,576 bytes (262,144 words)
+- Word size: 32 bits
+- Access: Single-cycle synchronous read/write
+- Ports: 2 independent ports (one per CPU)
+
+### GPIO Controller: `gpio_controller.v`
+
+10-pin general-purpose I/O controller with dual-port access.
+
+**Features:**
+- Programmable direction per pin (input/output)
+- Direct read of input values
+- Direct write to output values
+- No pull-up/pull-down resistors
+- No interrupt capability
+
+### UART Controller: `uart_controller.v`
+
+Serial communication interface with wake-up capability.
+
+**Configuration:**
+- Baud rate: 115200 (configurable via `BAUD_DIV` parameter)
+- Format: 8 data bits, no parity, 1 stop bit (8N1)
+- TX/RX with status flags
+- Generates wake-up signal on RX start bit
+
+### PMU Controller: `pmu_controller.v`
+
+Power Management Unit for sleep mode control.
+
+**Features:**
+- Software-controlled sleep mode entry
+- UART wake-up from sleep
+- CPU clock enable control
+- Status reporting
+
+### SPI Flash Interface: `spi_flash_interface.v`
+
+SPI controller for external Flash memory access.
+
+**Configuration:**
+- SPI Mode 0 (CPOL=0, CPHA=0)
+- Up to 100 MHz clock
+- Read command support (0x03)
+- 24-bit addressing (10 MB accessible)
+
+## 🗺️ Memory Map
+
+| Address Range | Size | Description | Access |
+|--------------|------|-------------|--------|
+| `0x00000000 - 0x000FFFFF` | 1 MB | Internal SRAM | RW |
+| `0x40000000 - 0x40000FFF` | 4 KB | GPIO Registers | RW |
+| `0x40001000 - 0x40001FFF` | 4 KB | UART Registers | RW |
+| `0x40002000 - 0x40002FFF` | 4 KB | PMU Registers | RW |
+
+### GPIO Register Map (Base: 0x40000000)
+
+| Offset | Register | Description |
+|--------|----------|-------------|
+| `0x0` | DATA | GPIO data (read: input, write: output) |
+| `0x4` | DIR | Direction (0=input, 1=output) |
+
+### UART Register Map (Base: 0x40001000)
+
+| Offset | Register | Description |
+|--------|----------|-------------|
+| `0x0` | DATA | TX/RX data register |
+| `0x4` | STATUS | [31:2]=Reserved, [1]=RX ready, [0]=TX busy |
+| `0x8` | CONTROL | [31:1]=Reserved, [0]=UART enable |
+
+### PMU Register Map (Base: 0x40002000)
+
+| Offset | Register | Description |
+|--------|----------|-------------|
+| `0x0` | CONTROL | [31:1]=Reserved, [0]=Sleep request |
+| `0x4` | STATUS | [31:1]=Reserved, [0]=Sleep mode active |
+
+## 🔨 Build Instructions
+
+### Prerequisites
+
+- **ModelSim** (or QuestaSim)
+- **Verilog-2001** compatible simulator
+
+### Compilation
+
+```bash
+# Create work library
+vlib work
+
+# Compile all source files
+vcom -work work -2001 rv32i_core.v
+vcom -work work -2001 sram_1mb.v
+vcom -work work -2001 gpio_controller.v
+vcom -work work -2001 uart_controller.v
+vcom -work work -2001 pmu_controller.v
+vcom -work work -2001 spi_flash_interface.v
+vcom -work work -2001 mvp_chip.v
+
+# Compile testbench
+vcom -work work -2001 tb_mvp_chip.v
 ```
 
-</div>
+### Simulation
 
-### CPU Cores
-- **2× Custom Design** - RISC-V ISA optimized for Sky130
-- Focus on efficiency and 130nm process optimization
-- Dual-core architecture for parallel processing
+```bash
+# Load the testbench
+vsim -t 1ps work.tb_mvp_chip
 
-### Memory Subsystem
-- **SRAM**: 1 MB (fast internal memory for program execution and data)
-  - Optimized for Sky130 memory compilers
-- **Flash**: 10 MB internal (if achievable with Sky130, otherwise external via SPI)
+# Add signals to waveform
+add wave -radix hex sim:/tb_mvp_chip/*
 
-### Peripherals
-- **GPIO**: 10-20 universal pins for basic inputs/outputs
-- **UART**: For debug communication and bootloader (mandatory)
-- **SPI**: For connecting external flash, sensors, and modules
-
-### Support Systems
-- **Clock Generator**: Basic oscillator with PLL (Sky130 analog IP)
-- **Power Management Unit (PMU)**: Voltage regulation optimized for 130nm
-
-> 💡 **Design Philosophy**: The chip is designed as a pure computational brain without complex analog components, leveraging Sky130's digital-focused capabilities.
-
-## 🔌 PCB Board - External Components
-
-<div align="center">
-
-```mermaid
-graph LR
-    subgraph "Custom SoC"
-        CHIP[Sky130 SoC<br/>130nm]
-    end
-    
-    subgraph "Power Management"
-        REG1[1.8V Regulator<br/>Core]
-        REG2[3.3V Regulator<br/>IO]
-    end
-    
-    subgraph "Communication"
-        WIFI[ESP32-C3<br/>Wi-Fi/BLE]
-        ANT[Antenna]
-    end
-    
-    subgraph "Storage"
-        FLASH_EXT[External Flash<br/>8-16MB SPI]
-    end
-    
-    subgraph "Connectivity"
-        GPIO_CONN[GPIO Headers]
-        XTAL[Crystal<br/>Oscillator]
-    end
-    
-    REG1 --> CHIP
-    REG2 --> CHIP
-    CHIP <--> WIFI
-    WIFI --> ANT
-    CHIP <--> FLASH_EXT
-    CHIP <--> GPIO_CONN
-    XTAL --> CHIP
+# Run simulation
+run -all
 ```
 
-</div>
+Or use the GUI:
 
-### Power Supply
-- **Power Regulators**: Optimized for Sky130 voltage requirements
-  - 1.8V for CPU core (Sky130 standard)
-  - 3.3V for I/O peripherals
-  - Low dropout regulators for clean power
+```bash
+# Start ModelSim GUI
+vsim -gui
 
-### Storage
-- **External SPI Flash**: 8-16 MB (backup solution for internal flash)
-- Standard industry chips compatible with Sky130 I/O
-
-### Communication Modules
-- **Wi-Fi/Bluetooth/Zigbee/Thread/Matter Module**
-  - ESP32-C3 as coprocessor
-  - Nordic nRF52/53
-  - Silicon Labs modules
-- **Antenna**: Directly connected to communication module
-
-## 📁 Project Structure
-
-```
-├── hardware/
-│   ├── sky130/              # SkyWater 130nm specific files
-│   │   ├── pdk/            # Process design kit files
-│   │   ├── libs/           # Standard cell libraries
-│   │   └── io/             # I/O pad libraries
-│   ├── soc/                # Chip design (HDL files)
-│   │   ├── cpu/            # RISC-V core implementation
-│   │   ├── memory/         # Memory controllers (Sky130 optimized)
-│   │   ├── peripherals/    # GPIO, UART, SPI modules
-│   │   └── pmu/            # Power management
-│   ├── pcb/                # Schematics and layout
-│   │   ├── schematics/     # Circuit diagrams
-│   │   ├── layout/         # PCB layout files
-│   │   └── bom/            # Bill of materials
-│   └── simulation/         # Testbenches and verification
-├── software/
-│   ├── bootloader/         # Custom bootloader
-│   ├── drivers/            # Hardware abstraction layer
-│   ├── examples/           # Sample applications
-│   └── tools/              # Development utilities
-├── fabrication/
-│   ├── gds/                # GDS files for Sky130
-│   ├── lef/                # Layout exchange format
-│   └── assembly/           # PCB assembly instructions
-└── documentation/
-    ├── sky130/             # SkyWater specific documentation
-    ├── architecture/       # System architecture docs
-    └── getting-started/    # Setup guides
+# In the GUI:
+# 1. File -> New -> Project
+# 2. Add all .v files
+# 3. Compile all
+# 4. Simulate -> Start Simulation -> select tb_mvp_chip
+# 5. Add waves and run
 ```
 
-## 🚀 Development Phases
+## 🧪 Testbench
 
-### Phase 1: Design & Simulation ✅
-- [x] CPU core architecture definition (RISC-V)
-- [x] Sky130 PDK integration
-- [ ] Memory subsystem design (Sky130 memory compilers)
-- [ ] Peripheral interfaces implementation
-- [ ] System-level simulation and verification
+The provided testbench (`tb_mvp_chip.v`) performs the following tests:
 
-### Phase 2: Silicon Implementation 🔄
-- [ ] RTL synthesis with Sky130 libraries
-- [ ] Place & route using OpenLane flow
-- [ ] Timing closure and power analysis
-- [ ] DRC/LVS verification with Sky130 rules
-- [ ] Tape-out preparation for SkyWater fab
+1. **Reset sequence** - Applies and releases reset
+2. **UART RX test** - Sends byte 0x55 via UART receive line
+3. **GPIO toggle test** - Drives GPIO pins with various patterns
+4. **Clock cycles** - Runs for multiple clock cycles to observe operation
 
-### Phase 3: PCB Development
-- [ ] System-level schematic design
-- [ ] Component selection (Sky130 compatible)
-- [ ] PCB layout and routing
-- [ ] Prototype assembly and testing
+### Expected Behavior
 
-### Phase 4: Software Stack
-- [ ] Bootloader development
-- [ ] Hardware abstraction layer
-- [ ] Driver implementation
-- [ ] Example applications
+- System boots from reset
+- UART receives the test byte
+- GPIO pins respond to external stimulus
+- UART wake signal triggers on RX activity
+- All modules respond to bus transactions
 
-## 🛠️ Tools & Technologies
+## 📂 Project Structure
 
-### Sky130 Design Flow
-- **PDK**: SkyWater Sky130 Open Source PDK
-- **Design Flow**: OpenLane (Google's open-source ASIC flow)
-- **Synthesis**: Yosys + ABC
-- **Place & Route**: OpenROAD
-- **Verification**: Magic (DRC/LVS), Netgen, XSchem
+```
+chip/
+├── README.md                    # This file
+├── mvp_chip.v                   # Top-level SoC module
+├── rv32i_core.v                 # RV32I CPU core (black box)
+├── sram_1mb.v                   # 1 MB dual-port SRAM
+├── gpio_controller.v            # GPIO peripheral
+├── uart_controller.v            # UART peripheral
+├── pmu_controller.v             # Power Management Unit
+├── spi_flash_interface.v        # SPI Flash controller
+└── tb_mvp_chip.v                # Testbench
+```
 
-### Hardware Design
-- **HDL**: Verilog/SystemVerilog (Sky130 compatible)
-- **Simulation**: Icarus Verilog, Verilator
-- **PCB Design**: KiCad
+## ⚙️ Configuration Parameters
 
-### Software Development
-- **Toolchain**: GCC RISC-V
-- **Debugger**: OpenOCD + GDB
-- **Build System**: Make/CMake
+### UART Baud Rate
 
-## 📊 Specifications
+Default: 115200 baud (100 MHz / 868 = 115207 baud)
 
-| Component | Specification |
-|-----------|---------------|
-| **Process Technology** | SkyWater Sky130 (130nm CMOS) |
-| **CPU Cores** | 2× Custom RISC-V |
-| **SRAM** | 1 MB (Sky130 memory compiler) |
-| **Flash** | 10 MB (internal/external) |
-| **GPIO** | 10-20 pins |
-| **Communication** | UART, SPI |
-| **Core Voltage** | 1.8V (Sky130 standard) |
-| **IO Voltage** | 3.3V |
-| **Package** | QFN64/QFN48 (TBD) |
-| **Die Size** | ~2-3 mm² (estimated) |
+To change, modify `BAUD_DIV` parameter in `uart_controller.v`:
 
-## 🏭 Manufacturing Partnership
+```verilog
+localparam BAUD_DIV = 868;  // 100 MHz / 115200
+```
 
-<div align="center">
+For different baud rates:
+- 9600: `BAUD_DIV = 10417`
+- 19200: `BAUD_DIV = 5208`
+- 38400: `BAUD_DIV = 2604`
+- 57600: `BAUD_DIV = 1736`
 
-![Google Open Source Silicon](https://developers.google.com/static/open-source/images/logo_lockup_open_source_horizontal.png)
+### SPI Clock Speed
 
-</div>
+The SPI controller generates clock cycles on every system clock edge during transactions. For a 100 MHz system clock, the effective SPI clock is 50 MHz.
 
-This project is part of **Google's Open Source Silicon Initiative**, which provides:
+## 🚀 Getting Started
 
-- 🆓 **Free access** to SkyWater 130nm PDK
-- 🏭 **Shuttle runs** for prototype fabrication
-- 📚 **Comprehensive documentation** and design resources
-- 🛠️ **Open-source toolchain** (OpenLane, OpenROAD)
+### 1. Clone the Repository
 
-### SkyWater Sky130 Advantages
-- **Mature Process**: Proven 130nm technology
-- **Mixed Signal**: Support for analog and digital designs
-- **Open Source**: Full PDK available on GitHub
-- **Cost Effective**: Accessible for educational/research projects
+```bash
+git clone https://github.com/prokopsafranek/chip.git
+cd chip
+```
 
-## 🤝 Contributing
+### 2. Compile the Design
 
-This is an open hardware project following Google's open-source silicon methodology. Contributions welcome in:
+```bash
+# Using ModelSim
+vlib work
+vlog -work work *.v
+```
 
-- RTL design and verification
-- Sky130 PDK optimization
-- PCB design improvements
-- Software drivers and examples
-- Documentation and tutorials
+### 3. Run Simulation
 
-## 📄 License
+```bash
+vsim -c -do "run -all" work.tb_mvp_chip
+```
 
-This project is licensed under **Apache 2.0** - see the LICENSE file for details.
-SkyWater PDK components are licensed under their respective open-source licenses.
+### 4. View Waveforms
 
-## 📞 Contact
+```bash
+vsim -gui work.tb_mvp_chip
+# Add waves and run interactively
+```
 
-- **Author**: Prokop Šafránek
-- **GitHub**: [@prokopsafranek](https://github.com/prokopsafranek)
-- **Project Repository**: [prokopsafranek/chip](https://github.com/prokopsafranek/chip)
+## 🔧 Development Notes
 
-## 🔗 Resources
+### CPU Core Implementation
 
-- [SkyWater Sky130 PDK](https://github.com/google/skywater-pdk)
-- [OpenLane Design Flow](https://github.com/The-OpenROAD-Project/OpenLane)
-- [Google Open Source Silicon](https://developers.google.com/silicon)
-- [RISC-V International](https://riscv.org/)
+The `rv32i_core.v` module is currently a black box placeholder. A full implementation would include:
+
+- Complete RV32I instruction decoder
+- Register file (32×32-bit registers)
+- ALU with all integer operations
+- Branch/jump logic
+- Load/store unit
+- Pipeline control and hazard handling
+
+### Future Enhancements
+
+Possible improvements for future versions:
+
+- [ ] Complete RV32I core implementation
+- [ ] Interrupt controller (PLIC)
+- [ ] Timer peripheral
+- [ ] DMA controller
+- [ ] Cache hierarchy
+- [ ] Debug interface (JTAG)
+- [ ] Additional SPI/I2C peripherals
+- [ ] Extended memory (DDR controller)
+
+## 📝 Design Constraints
+
+- **No interrupts**: All I/O is polling-based
+- **No CSR**: No Control and Status Registers
+- **Integer only**: No floating-point operations
+- **Simple arbiter**: Round-robin CPU access (may cause stalls)
+- **No cache**: Direct memory access only
+- **No protection**: No memory protection or privilege levels
+
+## 🐛 Troubleshooting
+
+### Simulation Issues
+
+**Problem**: Memory initialization warnings
+
+**Solution**: This is normal. The SRAM initializes to zeros at startup.
 
 ---
 
-<div align="center">
+**Problem**: UART timing mismatches
 
-![Sky130 Process](https://img.shields.io/badge/Fabricated%20on-SkyWater%20Sky130-blue?style=flat-square)
-![Open Source Hardware](https://img.shields.io/badge/Open%20Source-Hardware-green?style=flat-square)
-![RISC-V](https://img.shields.io/badge/ISA-RISC--V-orange?style=flat-square)
+**Solution**: Verify `BAUD_DIV` calculation matches your system clock frequency.
 
-**Built with ❤️ using Google's open-source silicon ecosystem**
+---
 
-</div>
+**Problem**: SPI Flash not responding
 
-> ⚠️ **Note**: This project is currently in development phase. Silicon fabrication is planned through Google's shuttle program with SkyWater Technology.
+**Solution**: Ensure `flash_miso` is driven in testbench or by Flash model.
+
+### Synthesis Issues
+
+**Problem**: Large memory arrays
+
+**Solution**: SRAM blocks should be mapped to FPGA block RAM. Configure synthesis tool accordingly.
+
+---
+
+**Problem**: Timing violations
+
+**Solution**: Add pipeline stages or reduce clock frequency. The design targets 100 MHz.
+
+## 📄 License
+
+This project is provided as-is for educational and research purposes.
+
+## 👤 Author
+
+**Prokop Šafránek**
+- GitHub: [@prokopsafranek](https://github.com/prokopsafranek)
+
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome!
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📚 References
+
+- [RISC-V Specification](https://riscv.org/technical/specifications/)
+- [RV32I Base Integer Instruction Set](https://github.com/riscv/riscv-isa-manual)
+- [Verilog-2001 Quick Reference](https://sutherland-hdl.com/pdfs/verilog_2001_ref_guide.pdf)
+
+---
+
+**Note**: This is a minimal educational design. It is not intended for production use without significant enhancements.
