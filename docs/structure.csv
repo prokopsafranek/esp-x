@@ -1,0 +1,9 @@
+type,name,path,parent
+file,Home,docs/index.md,
+file,Getting Started,docs/getting-started.md,
+folder,Guides,,
+file,Installation,docs/guides/installation.md,Guides
+file,Configuration,docs/guides/configuration.md,Guides
+folder,API,,
+file,Reference,docs/api/reference.md,API
+file,Examples,docs/api/examples.md,API

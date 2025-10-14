@@ -1,0 +1,7 @@
+path,summary
+docs/index.md,"Welcome to the documentation! This page provides an overview of all features including markdown support, syntax highlighting, dark mode, and responsive design. Perfect starting point for new users."
+docs/getting-started.md,"Quick start guide to help you begin using the documentation system. Learn how to create pages, organize content, and customize the appearance in just a few minutes."
+docs/guides/installation.md,"Complete installation guide with step-by-step instructions. Covers requirements, setup process, and common troubleshooting. Get up and running in under 5 minutes."
+docs/guides/configuration.md,"Comprehensive configuration guide. Learn how to customize navigation, themes, GitHub integration, and CSV file paths. All options explained with examples."
+docs/api/reference.md,"Full API reference documentation. All functions, parameters, and return values documented with detailed descriptions and practical use cases."
+docs/api/examples.md,"Collection of practical code examples. Includes JavaScript, Python, HTML, CSS, and Bash snippets. Copy-paste ready code for common tasks."
